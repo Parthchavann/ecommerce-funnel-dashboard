@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔴 LIVE E-Commerce Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #ff4444;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .status {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            background: linear-gradient(45deg, #fff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .positive {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .funnel-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .funnel-stage {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .funnel-stage:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .stage-name {
+            font-weight: bold;
+        }
+
+        .stage-value {
+            font-size: 1.2rem;
+        }
+
+        .stage-rate {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .alerts-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .alert-high {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid #ef4444;
+        }
+
+        .alert-medium {
+            background: rgba(251, 191, 36, 0.2);
+            border-left: 4px solid #fbbf24;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .data-sources {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .source-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .source-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+        }
+
+        .connected {
+            background: #22c55e;
+        }
+
+        .disconnected {
+            background: #ef4444;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🔴 LIVE E-Commerce Analytics</h1>
+            <p>Real-time business intelligence dashboard</p>
+        </div>
+        <div class="live-indicator">
+            <div class="pulse"></div>
+            <div>
+                <strong>LIVE</strong>
+                <div class="status" id="connection-status">Connecting...</div>
+                <div class="status" id="last-updated">Starting up...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Active Sessions</div>
+                <div class="metric-value" id="active-sessions">-</div>
+                <div class="metric-change positive" id="sessions-change">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Conversion Rate</div>
+                <div class="metric-value" id="conversion-rate">-</div>
+                <div class="metric-change" id="conversion-change">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Revenue Today</div>
+                <div class="metric-value" id="revenue-today">$-</div>
+                <div class="metric-change positive" id="revenue-change">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Cart Abandonment</div>
+                <div class="metric-value" id="cart-abandonment">-</div>
+                <div class="metric-change" id="abandonment-change">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Average Order Value</div>
+                <div class="metric-value" id="aov">$-</div>
+                <div class="metric-change" id="aov-change">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Revenue This Hour</div>
+                <div class="metric-value" id="revenue-hour">$-</div>
+                <div class="metric-change positive" id="hour-change">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">📈 Real-Time Funnel Performance</div>
+                <canvas id="funnelChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">🔄 Live Conversion Funnel</div>
+                <div class="funnel-visual" id="funnel-visual">
+                    <div class="funnel-stage">
+                        <div class="stage-name">👀 Visits</div>
+                        <div>
+                            <div class="stage-value" id="funnel-visits">-</div>
+                            <div class="stage-rate">100%</div>
+                        </div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div class="stage-name">🛒 Add to Cart</div>
+                        <div>
+                            <div class="stage-value" id="funnel-carts">-</div>
+                            <div class="stage-rate" id="funnel-cart-rate">-%</div>
+                        </div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div class="stage-name">💳 Purchases</div>
+                        <div>
+                            <div class="stage-value" id="funnel-purchases">-</div>
+                            <div class="stage-rate" id="funnel-purchase-rate">-%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alerts-section">
+            <h3>🚨 Live Alerts & Notifications</h3>
+            <div id="alerts-container">
+                <p style="opacity: 0.6;">No active alerts. System running normally.</p>
+            </div>
+        </div>
+
+        <!-- Data Sources Status -->
+        <div class="data-sources">
+            <div class="source-card">
+                <h4>📊 Analytics Engine</h4>
+                <span class="source-status connected"></span>
+                <span>Connected</span>
+            </div>
+            <div class="source-card">
+                <h4>🔄 Real-Time Pipeline</h4>
+                <span class="source-status connected"></span>
+                <span>Active</span>
+            </div>
+            <div class="source-card">
+                <h4>🛒 Shopify API</h4>
+                <span class="source-status" id="shopify-status"></span>
+                <span id="shopify-text">Ready</span>
+            </div>
+            <div class="source-card">
+                <h4>📈 Google Analytics</h4>
+                <span class="source-status" id="ga-status"></span>
+                <span id="ga-text">Ready</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        🔴 Live E-Commerce Dashboard | Production Ready | Real-Time Analytics
+    </div>
+
+    <script>
+        class LiveDashboard {
+            constructor() {
+                this.websocket = null;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+                this.chart = null;
+                this.previousMetrics = null;
+                
+                this.initChart();
+                this.connectWebSocket();
+                this.startPolling();
+            }
+
+            initChart() {
+                const ctx = document.getElementById('funnelChart').getContext('2d');
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Conversion Rate (%)',
+                            data: [],
+                            borderColor: '#00d4ff',
+                            backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Active Sessions',
+                            data: [],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: { color: 'white' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: 'white' },
+                                grid: { color: 'rgba(255,255,255,0.1)' }
+                            },
+                            y: {
+                                ticks: { color: 'white' },
+                                grid: { color: 'rgba(255,255,255,0.1)' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                ticks: { color: 'white' },
+                                grid: { drawOnChartArea: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            connectWebSocket() {
+                try {
+                    const wsUrl = `ws://localhost:8080/websocket`;
+                    this.websocket = new WebSocket(wsUrl);
+                    
+                    this.websocket.onopen = () => {
+                        console.log('✅ WebSocket connected');
+                        document.getElementById('connection-status').textContent = 'Connected (WebSocket)';
+                        this.reconnectAttempts = 0;
+                    };
+                    
+                    this.websocket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        this.updateDashboard(data);
+                    };
+                    
+                    this.websocket.onclose = () => {
+                        console.log('❌ WebSocket disconnected');
+                        document.getElementById('connection-status').textContent = 'Reconnecting...';
+                        this.scheduleReconnect();
+                    };
+                    
+                    this.websocket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        document.getElementById('connection-status').textContent = 'Connection Error';
+                    };
+                    
+                } catch (error) {
+                    console.error('WebSocket connection failed:', error);
+                    this.startPolling();
+                }
+            }
+
+            scheduleReconnect() {
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    setTimeout(() => {
+                        console.log(`Reconnection attempt ${this.reconnectAttempts}`);
+                        this.connectWebSocket();
+                    }, 5000 * this.reconnectAttempts);
+                } else {
+                    console.log('Max reconnection attempts reached, falling back to polling');
+                    this.startPolling();
+                }
+            }
+
+            startPolling() {
+                // Fallback to HTTP polling if WebSocket fails
+                setInterval(async () => {
+                    try {
+                        const response = await fetch('/api/live-metrics');
+                        const data = await response.json();
+                        this.updateDashboard(data);
+                        document.getElementById('connection-status').textContent = 'Connected (HTTP)';
+                    } catch (error) {
+                        console.error('Polling error:', error);
+                        document.getElementById('connection-status').textContent = 'Connection Error';
+                    }
+                }, 10000); // Poll every 10 seconds
+            }
+
+            updateDashboard(data) {
+                // Update timestamp
+                const updateTime = new Date().toLocaleTimeString();
+                document.getElementById('last-updated').textContent = `Updated: ${updateTime}`;
+                
+                // Update key metrics
+                this.updateMetric('active-sessions', data.active_sessions, this.previousMetrics?.active_sessions);
+                this.updateMetric('conversion-rate', data.conversion_rate + '%', this.previousMetrics?.conversion_rate, true);
+                this.updateMetric('revenue-today', '$' + data.revenue_today.toLocaleString(), this.previousMetrics?.revenue_today);
+                this.updateMetric('cart-abandonment', data.cart_abandonment_rate + '%', this.previousMetrics?.cart_abandonment_rate, true);
+                this.updateMetric('aov', '$' + data.average_order_value, this.previousMetrics?.average_order_value);
+                this.updateMetric('revenue-hour', '$' + data.revenue_this_hour, this.previousMetrics?.revenue_this_hour);
+
+                // Update funnel visual
+                this.updateFunnelVisual(data.funnel_metrics);
+                
+                // Update chart
+                this.updateChart(data);
+                
+                // Update alerts
+                this.updateAlerts(data.alerts || []);
+                
+                // Store for comparison
+                this.previousMetrics = data;
+            }
+
+            updateMetric(elementId, value, previousValue, isPercentage = false) {
+                const element = document.getElementById(elementId);
+                const changeElement = document.getElementById(elementId.replace(/-([\w]+)$/, '-change'));
+                
+                if (element) {
+                    element.textContent = value;
+                    
+                    // Animate value change
+                    element.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                    }, 200);
+                }
+                
+                if (changeElement && previousValue !== undefined) {
+                    const current = parseFloat(value.toString().replace(/[$%,]/g, ''));
+                    const previous = parseFloat(previousValue.toString());
+                    const change = ((current - previous) / previous) * 100;
+                    
+                    if (!isNaN(change)) {
+                        const changeText = change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
+                        changeElement.textContent = changeText;
+                        changeElement.className = `metric-change ${change > 0 ? 'positive' : 'negative'}`;
+                    }
+                }
+            }
+
+            updateFunnelVisual(funnelData) {
+                if (!funnelData) return;
+                
+                const visits = funnelData.visits || 0;
+                const carts = funnelData.carts || 0;
+                const purchases = funnelData.purchases || 0;
+                
+                document.getElementById('funnel-visits').textContent = visits.toLocaleString();
+                document.getElementById('funnel-carts').textContent = carts.toLocaleString();
+                document.getElementById('funnel-purchases').textContent = purchases.toLocaleString();
+                
+                const cartRate = visits > 0 ? ((carts / visits) * 100).toFixed(1) : 0;
+                const purchaseRate = visits > 0 ? ((purchases / visits) * 100).toFixed(1) : 0;
+                
+                document.getElementById('funnel-cart-rate').textContent = cartRate + '%';
+                document.getElementById('funnel-purchase-rate').textContent = purchaseRate + '%';
+            }
+
+            updateChart(data) {
+                const now = new Date().toLocaleTimeString();
+                
+                // Add new data point
+                this.chart.data.labels.push(now);
+                this.chart.data.datasets[0].data.push(data.conversion_rate);
+                this.chart.data.datasets[1].data.push(data.active_sessions);
+                
+                // Keep only last 20 points
+                if (this.chart.data.labels.length > 20) {
+                    this.chart.data.labels.shift();
+                    this.chart.data.datasets[0].data.shift();
+                    this.chart.data.datasets[1].data.shift();
+                }
+                
+                this.chart.update('none');
+            }
+
+            updateAlerts(alerts) {
+                const container = document.getElementById('alerts-container');
+                
+                if (!alerts || alerts.length === 0) {
+                    container.innerHTML = '<p style="opacity: 0.6;">No active alerts. System running normally.</p>';
+                    return;
+                }
+                
+                container.innerHTML = alerts.map(alert => `
+                    <div class="alert-item alert-${alert.severity}">
+                        <div class="alert-icon">${this.getAlertIcon(alert.type)}</div>
+                        <div>
+                            <strong>${alert.message}</strong>
+                            <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.2rem;">
+                                ${alert.action || 'No action required'}
+                            </div>
+                            <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 0.2rem;">
+                                ${new Date(alert.timestamp).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getAlertIcon(type) {
+                const icons = {
+                    'conversion_drop': '📉',
+                    'high_abandonment': '🛒',
+                    'no_activity': '⏰',
+                    'system_error': '🚨',
+                    'performance_issue': '⚡'
+                };
+                return icons[type] || '⚠️';
+            }
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new LiveDashboard();
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // Reconnect when page becomes visible again
+                setTimeout(() => {
+                    new LiveDashboard();
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

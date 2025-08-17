@@ -1,10 +1,10 @@
 {
   "execution_summary": {
-    "total_runtime": "-124.3 seconds",
+    "total_runtime": "186.8 seconds",
     "components_executed": 5,
     "ml_models_trained": 2,
     "ab_tests_analyzed": 3,
-    "realtime_events_processed": 301,
+    "realtime_events_processed": 302,
     "strategic_insights_generated": 3
   },
   "ml_performance": {
@@ -15,7 +15,7 @@
     "auc_roc": 0.943,
     "cross_validation_score": 0.885
   },
-  "high_risk_predictions": 10,
+  "high_risk_predictions": 8,
   "ab_testing_results": [
     {
       "test_name": "Free Shipping Threshold ($50 vs $75)",
@@ -99,9 +99,9 @@
     },
     "key_metrics": {
       "total_customers": 5000,
-      "average_clv": 559.9,
-      "high_value_customers": 2086,
-      "high_value_percentage": 41.7
+      "average_clv": 558.34,
+      "high_value_customers": 2082,
+      "high_value_percentage": 41.6
     }
   },
   "business_impact": {
@@ -109,9 +109,9 @@
     "roi_projection": 429.4,
     "customer_insights": {
       "total_customers": 5000,
-      "average_clv": 559.9,
-      "high_value_customers": 2086,
-      "high_value_percentage": 41.7
+      "average_clv": 558.34,
+      "high_value_customers": 2082,
+      "high_value_percentage": 41.6
     }
   }
 }
